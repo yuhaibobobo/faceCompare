@@ -55,10 +55,13 @@ Page({
     // 从相册和相机中获取图片
     wx.chooseImage({
       count : 1,
+      sizeType: ['compressed'],
+      sourceType: ['album','camera'],
       success: function(res) {
         let imgPathA = res.tempFilePaths[0];
         
         let Abase64 = wx.getFileSystemManager().readFileSync(imgPathA, "base64")
+        //Abase64 　= 'data:image/jpeg;base64,' + Abase64
         that.setData({
           image_a:Abase64
         },()=>{
@@ -67,11 +70,13 @@ Page({
           }).get().then(res =>{
             let imgPathB = res.data[0].imgPath;
             let Bbase64 = wx.getFileSystemManager().readFileSync(imgPathB,"base64");
+            //Bbase64 = 'data:image/jpeg;base64,' + Bbase64
             that.setData({
               image_b:Bbase64
             },() =>{
-              //console.log(Abase64);
-              //console.log(Bbase64);
+              console.log(that.data.image_a);
+              console.log(that.data.image_b);
+              console.log(that.data.app_id)
               wx.cloud.callFunction({
                 name: 'faceCompare',
                 data: {
@@ -83,14 +88,21 @@ Page({
                   "app_key": that.data.app_key
                 },
               }).then(res => {
-                console.log(res.result);
-                /*
-                if (res.result.data.similarity > 80){
+                res = res.result.replace(/\ufeff/g, "");
+                res = JSON.parse(res)
+                console.log(res);
+                //console.log(res.result.data)
+                //console.log(res.result.data.similarity)
+                
+                if (res.data.similarity > 70){
                   wx.navigateTo({
-                    url: './test',
+                    url: '../success/index',
+                  })
+                }else{
+                  wx.navigateTo({
+                    url: '../fail/index',
                   })
                 }
-                */
               }).catch(err => {
                 console.log("fail" + err);
               })
